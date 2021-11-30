@@ -2,10 +2,10 @@ import argparse
 import os
 
 import cv2
-# コマンドライン引数を取り出す関数
 import numpy as np
 
 
+# コマンドライン引数を取り出す関数
 def init_argument():
     parser = argparse.ArgumentParser()
     parser.add_argument("input_file", help="File name of the video to be converted")
@@ -54,10 +54,11 @@ if __name__ == '__main__':
 
     # 切り出した画像を保存しておくリスト
     images = cut_images(mov_filename, dframe)
-    print(type(images))
-    print(np.shape(images))
 
     j = 0
+    img_filename = mov_filename.split('.')[0]
     for image in images:
-        cv2.imwrite(f'{output_dir}/sample{j}.jpg', image)
+        filename = f'{output_dir}/{img_filename}{j}.jpg'
+        print(f'Add {filename}...')
+        cv2.imwrite(filename, image)
         j += 1
