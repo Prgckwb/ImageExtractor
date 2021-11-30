@@ -1,8 +1,9 @@
+# Written by Prgckwb
+
 import argparse
 import os
 
 import cv2
-import numpy as np
 
 
 # コマンドライン引数を取り出す関数
