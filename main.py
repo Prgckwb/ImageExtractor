@@ -35,13 +35,8 @@ def cut_images(movie_filename, dframe):
     return images
 
 
-# ターミナルからの実行方法
-# % python3 main.py (変換したい動画ファイル名) (画像を保存したいディレクトリ名)
-# ex) python3 main.py sample.mp4 ./output
 if __name__ == '__main__':
 
-    # ターミナルでコマンドライン引数がなかった時の例外処理
-    # IDEで実行した場合はsample.mp4をファイル名とする
     args = init_argument()
     mov_filename = args.input_file
     output_dir = args.output_path
