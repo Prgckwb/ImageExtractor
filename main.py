@@ -22,14 +22,13 @@ def init_argument():
 # Remove duplicate images using PSNR method and return image list.
 # The value of "25" is used as the threshold to identify the same image by the PSNR method.
 def cut_images(movie_filename, dframe):
-    print('Cutting now...')
     images = []
     cap = cv2.VideoCapture(movie_filename)
     max_frame = cap.get(cv2.CAP_PROP_FRAME_COUNT)
 
     i = 0
     while cap.isOpened():
-        print('\r[Progress]: {:.3f}%'.format(i * 100.0 / max_frame), end='')
+        print('\r - Cutting now... {:.3f}%'.format(i * 100.0 / max_frame), end='')
 
         if i % dframe == 0:
             ret, current_frame = cap.read()
@@ -39,7 +38,7 @@ def cut_images(movie_filename, dframe):
             ret = cap.grab()
 
         if not ret:
-            print("\nExtract Finished.")
+            print()
             break
 
         i += 1
@@ -70,16 +69,20 @@ if __name__ == '__main__':
 
     file_count = 0
     for image in images:
+        print('\r - Converting JPG Files to PDF Files now... {:.3f}%'.format((file_count + 1) * 100.0 / len(images)),
+              end='')
         filename = f'{output_dir}/{img_filename}_{file_count}.pdf'
         img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
         img.convert("RGB").save(filename)
         file_count += 1
 
+    print()
     merger = PyPDF2.PdfFileMerger()
     for i in range(file_count):
+        print('\r - Creating Combined PDF File now... {:.3f}%'.format((i + 1) * 100.0 / file_count), end='')
         merger.append(f'{output_dir}/{img_filename}_{i}.pdf')
     merger.write(f'{img_filename}.pdf')
-    print(f'File: {output_dir}/{img_filename}*.pdf has been created.')
+    print(f'\nFile: {output_dir}/{img_filename}_*.pdf has been created.')
     print(f'File: {img_filename}.pdf has been created.')
     merger.close()
 
