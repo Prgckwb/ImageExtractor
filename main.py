@@ -70,7 +70,6 @@ if __name__ == '__main__':
     for image in images:
         filename = f'{output_dir}/{img_filename}{j}.jpg'
         print(f'Add {filename}...')
-        # cv2.imwrite(filename, image)
         j += 1
 
     print('\nAll files have been Written.')
