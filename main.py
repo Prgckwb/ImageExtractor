@@ -79,7 +79,7 @@ if __name__ == '__main__':
     for i in range(file_count):
         merger.append(f'{output_dir}/{img_filename}_{i}.pdf')
     merger.write(f'{img_filename}.pdf')
-    print(f'File: {output_dir}/{img_filename}*.jpg has been created.')
+    print(f'File: {output_dir}/{img_filename}*.pdf has been created.')
     print(f'File: {img_filename}.pdf has been created.')
     merger.close()
 
