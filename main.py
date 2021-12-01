@@ -4,7 +4,9 @@ import argparse
 import os
 import time
 
+import PyPDF2
 import cv2
+from PIL import Image
 
 
 # Function to retrieve command line arguments
@@ -69,11 +71,24 @@ if __name__ == '__main__':
     for image in images:
         filename = f'{output_dir}/{img_filename}{j}.jpg'
         print(f'Add {filename}...')
-        cv2.imwrite(filename, image)
+        # cv2.imwrite(filename, image)
         j += 1
 
     print('\nFiles have been Written!!')
 
+    file_count = 0
+    for image in images:
+        filename = f'{output_dir}/{img_filename}{file_count}.pdf'
+        img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+        img.convert("RGB").save(filename)
+        file_count += 1
+
+    merger = PyPDF2.PdfFileMerger()
+    for i in range(file_count):
+        merger.append(f'{output_dir}/{img_filename}{i}.pdf')
+    merger.write(f'{img_filename}.pdf')
+    merger.close()
+
     # End point for measurement of execution time
     end = time.perf_counter()
-    print(f'実行時間: {end - start}')
+    print('Execution time: {:.3f}s'.format(end - start))
