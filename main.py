@@ -19,10 +19,12 @@ def init_argument():
 
 # Function to extract an image by specifying the video file name and the number of frames to be cut out.
 # Remove duplicate images using PSNR method and return image list.
+# The value of "25" is used as the threshold to identify the same image by the PSNR method.
 def cut_images(movie_filename, dframe):
     print('Cutting now...')
     images = []
     cap = cv2.VideoCapture(movie_filename)
+
     i = 0
     while cap.isOpened():
         if i % dframe == 0:
