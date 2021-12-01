@@ -13,7 +13,6 @@ from PIL import Image
 def init_argument():
     parser = argparse.ArgumentParser()
     parser.add_argument("input_file", help="File name of the video to be converted")
-    parser.add_argument("output_path", help="Path of the image file to be output")
     parser.add_argument("frame", help="Number of frames to be cut from the video.", type=int)
     argument = parser.parse_args()
     return argument
@@ -37,7 +36,7 @@ def cut_images(movie_filename, dframe):
             ret = cap.grab()
 
         if not ret:
-            print("Extract Finished!!")
+            print("Extract Finished.")
             break
 
         i += 1
@@ -52,7 +51,7 @@ if __name__ == '__main__':
     # Getting command line arguments
     args = init_argument()
     mov_filename = args.input_file
-    output_dir = args.output_path
+    output_dir = './output'
     dframe = args.frame
     img_filename = mov_filename.split('.')[0]
 
@@ -74,7 +73,7 @@ if __name__ == '__main__':
         # cv2.imwrite(filename, image)
         j += 1
 
-    print('\nFiles have been Written!!')
+    print('\nAll files have been Written.')
 
     file_count = 0
     for image in images:
@@ -87,6 +86,7 @@ if __name__ == '__main__':
     for i in range(file_count):
         merger.append(f'{output_dir}/{img_filename}{i}.pdf')
     merger.write(f'{img_filename}.pdf')
+    print(f'File: {img_filename}.pdf has been created.')
     merger.close()
 
     # End point for measurement of execution time
