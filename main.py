@@ -70,14 +70,14 @@ if __name__ == '__main__':
 
     file_count = 0
     for image in images:
-        filename = f'{output_dir}/{img_filename}{file_count}.pdf'
+        filename = f'{output_dir}/{img_filename}_{file_count}.pdf'
         img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
         img.convert("RGB").save(filename)
         file_count += 1
 
     merger = PyPDF2.PdfFileMerger()
     for i in range(file_count):
-        merger.append(f'{output_dir}/{img_filename}{i}.pdf')
+        merger.append(f'{output_dir}/{img_filename}_{i}.pdf')
     merger.write(f'{img_filename}.pdf')
     print(f'File: {output_dir}/{img_filename}*.jpg has been created.')
     print(f'File: {img_filename}.pdf has been created.')
