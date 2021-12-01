@@ -12,8 +12,6 @@ A program that extracts image files from video files. OpenCV, PyPDF2 and pillow 
 
 ## Usage
 
-If you don't have OpenCV in your environment, you can install it as follows
-
 ### Conda (Recommend)
 
 ```
