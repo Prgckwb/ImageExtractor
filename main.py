@@ -25,9 +25,12 @@ def cut_images(movie_filename, dframe):
     print('Cutting now...')
     images = []
     cap = cv2.VideoCapture(movie_filename)
+    max_frame = cap.get(cv2.CAP_PROP_FRAME_COUNT)
 
     i = 0
     while cap.isOpened():
+        print('\r[Progress]: {:.3f}%'.format(i * 100.0 / max_frame), end='')
+
         if i % dframe == 0:
             ret, current_frame = cap.read()
             if ret and (i == 0 or cv2.PSNR(images[-1], current_frame) < 25):
@@ -36,7 +39,7 @@ def cut_images(movie_filename, dframe):
             ret = cap.grab()
 
         if not ret:
-            print("Extract Finished.")
+            print("\nExtract Finished.")
             break
 
         i += 1
@@ -64,15 +67,6 @@ if __name__ == '__main__':
     # images: A list of images extracted from the video.
     # j: Index to use for image file names
     images = cut_images(mov_filename, dframe)
-    j = 0
-
-    # Writing image files
-    for image in images:
-        filename = f'{output_dir}/{img_filename}{j}.jpg'
-        print(f'Add {filename}...')
-        j += 1
-
-    print('\nAll files have been Written.')
 
     file_count = 0
     for image in images:
@@ -85,6 +79,7 @@ if __name__ == '__main__':
     for i in range(file_count):
         merger.append(f'{output_dir}/{img_filename}{i}.pdf')
     merger.write(f'{img_filename}.pdf')
+    print(f'File: {output_dir}/{img_filename}*.jpg has been created.')
     print(f'File: {img_filename}.pdf has been created.')
     merger.close()
 
