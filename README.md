@@ -19,7 +19,7 @@ pip3 install opencv-python
 ```
 
 ### Run
-ex) Extract the video file "sample.mp4" to the "output" folder in the same directory as an image every 180 frames.
+ex) Extract the video file **sample.mp4** to the **output** folder in the same directory as an image every **180** frames.
 ```
 python3 main.py sample.mp4 ./output 180
 ```
@@ -30,4 +30,6 @@ python3 main.py sample.mp4 ./output 180
   - The frame specification number is too small.
   - The video is too long.
   - Video quality is too high.
+  
+  ex) Under my PC's execution environment, extracting a video of 42 minutes in length with a size of 640x480 every 180 frames took about 20 seconds before the program finished.
 
