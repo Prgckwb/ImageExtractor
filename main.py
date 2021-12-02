@@ -22,28 +22,28 @@ def init_argument():
 # Remove duplicate images using PSNR method and return image list.
 # The value of "25" is used as the threshold to identify the same image by the PSNR method.
 def cut_images(movie_filename, dframe):
-    images = []
-    cap = cv2.VideoCapture(movie_filename)
-    max_frame = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+    saved_images = []
+    video_capture = cv2.VideoCapture(movie_filename)
+    max_frame = video_capture.get(cv2.CAP_PROP_FRAME_COUNT)
 
-    i = 0
-    while cap.isOpened():
-        print('\r - Cutting now... {:.3f}%'.format(i * 100.0 / max_frame), end='')
+    frame_count = 0
+    while video_capture.isOpened():
+        print('\r - Cutting now... {:.3f}%'.format(frame_count * 100.0 / max_frame), end='')
 
-        if i % dframe == 0:
-            ret, current_frame = cap.read()
-            if ret and (i == 0 or cv2.PSNR(images[-1], current_frame) < 25):
-                images.append(current_frame)
+        if frame_count % dframe == 0:
+            ret, current_frame = video_capture.read()
+            if ret and (frame_count == 0 or cv2.PSNR(saved_images[-1], current_frame) < 25):
+                saved_images.append(current_frame)
         else:
-            ret = cap.grab()
+            ret = video_capture.grab()
 
         if not ret:
             print()
             break
 
-        i += 1
-    cap.release()
-    return images
+        frame_count += 1
+    video_capture.release()
+    return saved_images
 
 
 if __name__ == '__main__':
@@ -54,7 +54,7 @@ if __name__ == '__main__':
     args = init_argument()
     mov_filename = args.input_file
     output_dir = './output'
-    dframe = args.frame
+    frame = args.frame
     img_filename = mov_filename.split('.')[0]
 
     # If the directory specified as the output destination does not exist, create it.
@@ -65,7 +65,7 @@ if __name__ == '__main__':
 
     # images: A list of images extracted from the video.
     # j: Index to use for image file names
-    images = cut_images(mov_filename, dframe)
+    images = cut_images(mov_filename, frame)
 
     file_count = 0
     for image in images:
@@ -77,6 +77,7 @@ if __name__ == '__main__':
         file_count += 1
 
     print()
+
     merger = PyPDF2.PdfFileMerger()
     for i in range(file_count):
         print('\r - Creating Combined PDF File now... {:.3f}%'.format((i + 1) * 100.0 / file_count), end='')

@@ -30,7 +30,7 @@ frames.
 ```
 python3 main.py sample.mp4 180
 ```
-<img width="737" alt="SS_2021-12-01_15-08-24" src="https://user-images.githubusercontent.com/55102558/144181190-d42424a9-42cc-459c-b2ba-4f4173f4fd4b.png">
+<img width="737" alt="SS_2021-12-02_16-26-35" src="https://user-images.githubusercontent.com/55102558/144376900-257fdbc2-4971-498c-bb9f-2c91d2f1777e.png">
 
 ## Note
 
