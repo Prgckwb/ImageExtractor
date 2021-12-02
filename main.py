@@ -53,8 +53,8 @@ if __name__ == '__main__':
     # Getting command line arguments
     args = init_argument()
     mov_filename = args.input_file
-    output_dir = './output'
     frame = args.frame
+    output_dir = './output'
     img_filename = mov_filename.split('.')[0]
 
     # If the directory specified as the output destination does not exist, create it.
@@ -64,12 +64,12 @@ if __name__ == '__main__':
         pass
 
     # images: A list of images extracted from the video.
-    # j: Index to use for image file names
     images = cut_images(mov_filename, frame)
 
+    # Convert a numpy array to an Image array in the Pillow module to generate individual PDF files.
     file_count = 0
     for image in images:
-        print('\r - Converting JPG Files to PDF Files now... {:.3f}%'.format((file_count + 1) * 100.0 / len(images)),
+        print('\r - Converting Image Array to PDF Files now... {:.3f}%'.format((file_count + 1) * 100.0 / len(images)),
               end='')
         filename = f'{output_dir}/{img_filename}_{file_count}.pdf'
         img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
@@ -78,6 +78,7 @@ if __name__ == '__main__':
 
     print()
 
+    # Merge disparate PDF files into one PDF file
     merger = PyPDF2.PdfFileMerger()
     for i in range(file_count):
         print('\r - Creating Combined PDF File now... {:.3f}%'.format((i + 1) * 100.0 / file_count), end='')
