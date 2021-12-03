@@ -46,6 +46,8 @@ def cut_images(movie_filename, dframe):
     return saved_images
 
 
+# Function to detect image duplicates and remove them.
+# To detect duplicates in a double loop, use the image list once the duplicates of adjacent frames are removed.
 def remove_duplicate(imgs):
     delete_index = set()
     imgs_length = len(imgs)

@@ -30,7 +30,9 @@ frames.
 ```
 python3 main.py sample.mp4 180
 ```
-<img width="737" alt="SS_2021-12-02_16-26-35" src="https://user-images.githubusercontent.com/55102558/144376900-257fdbc2-4971-498c-bb9f-2c91d2f1777e.png">
+<img width="762" alt="SS_2021-12-03_17-18-40" src="https://user-images.githubusercontent.com/55102558/144569088-2269ca42-e080-49cd-ae87-d9fe555fa639.png">
+
+As a result, a PDF file containing the extracted images will be generated in the directory where the python command was executed, and their individual PDF files in the output folder.
 
 ## Note
 
