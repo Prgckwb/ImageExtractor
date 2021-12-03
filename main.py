@@ -51,13 +51,15 @@ def cut_images(movie_filename, dframe):
 def remove_duplicate(imgs):
     delete_index = set()
     imgs_length = len(imgs)
+    count = imgs_length
     for i in range(imgs_length - 1):
         for j in range(i + 1, imgs_length):
             print('\r - Deleting duplicate images... {:.3f}%'.format(
-                100.0 * (i + 1) * (j + 1) / (imgs_length * (imgs_length - 1))),
+                100.0 * count / (imgs_length * (imgs_length - 1))),
                 end='')
             if cv2.PSNR(imgs[i], imgs[j]) > 25:
                 delete_index.add(j)
+        count += imgs_length
 
     print()
     delete_index = list(delete_index)
