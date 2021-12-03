@@ -46,6 +46,26 @@ def cut_images(movie_filename, dframe):
     return saved_images
 
 
+def remove_duplicate(imgs):
+    delete_index = set()
+    imgs_length = len(imgs)
+    for i in range(imgs_length - 1):
+        for j in range(i + 1, imgs_length):
+            print('\r - Deleting duplicate images... {:.3f}%'.format(
+                100.0 * (i + 1) * (j + 1) / (imgs_length * (imgs_length - 1))),
+                end='')
+            if cv2.PSNR(imgs[i], imgs[j]) > 25:
+                delete_index.add(j)
+
+    print()
+    delete_index = list(delete_index)
+    delete_index.reverse()
+    for i in delete_index:
+        imgs.pop(i)
+
+    return imgs
+
+
 if __name__ == '__main__':
     # Start point for measurement of execution time
     start = time.perf_counter()
@@ -64,23 +84,10 @@ if __name__ == '__main__':
         pass
 
     # images: A list of images extracted from the video.
-    # images = cut_images(mov_filename, frame)
     images = cut_images(mov_filename, frame)
 
-    # DEBUG
-    # delete_index = set()
-    # images_length = len(images)
-    # for i in range(images_length - 1):
-    #     for j in range(i + 1, images_length):
-    #         # 要改善
-    #         print('\r - Deleting duplicate images... {:.3f}%'.format(100.0 * i * j / (images_length * images_length)),
-    #               end='')
-    #         if cv2.PSNR(images[i], images[j]) > 25:
-    #             delete_index.add(j)
-    #
-    # print(delete_index)
-    # images.remove(delete_index)
-    # DEBUG
+    # Recheck for duplicate images and delete them if they exist.
+    images = remove_duplicate(images)
 
     # Convert a numpy array to an Image array in the Pillow module to generate individual PDF files.
     file_count = 0
