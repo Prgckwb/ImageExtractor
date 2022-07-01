@@ -76,7 +76,7 @@ def compare(index=0):
     for i in range(len(images_list)):
         d = np.sqrt((data[index][0] - data[i][0]) ** 2)
         distance.append(d.sum())
-    distance = np.array(distance)  / np.max(distance)
+    distance = np.array(distance) / np.max(distance)
     distance = list(distance)
 
     dict = []

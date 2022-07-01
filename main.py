@@ -8,6 +8,7 @@ import time
 import PyPDF2
 import cv2
 from PIL import Image
+from tqdm import tqdm
 
 
 # TODO: プログレスバーをtqdmに移植
@@ -22,32 +23,26 @@ def init_argument():
     return argument
 
 
-# Function to extract an image by specifying the video file name and the number of frames to be cut out.
-# Remove duplicate images using PSNR method and return image list.
-# The value of "25" is used as the threshold to identify the same image by the PSNR method.
-def cut_images(movie_filename, dframe):
-    saved_images = []
-    video_capture = cv2.VideoCapture(movie_filename)
-    max_frame = video_capture.get(cv2.CAP_PROP_FRAME_COUNT)
+# 動画ファイルからdframeごとに画像を抽出する
+def cut_images(video_name, dframe):
+    images = []
+    video_capture = cv2.VideoCapture(video_name)
 
-    frame_count = 0
-    while video_capture.isOpened():
-        print('\r - Cutting now... {:.3f}%'.format(frame_count * 100.0 / max_frame), end='')
+    # 動画の全フレーム数
+    max_frame = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
 
+    # 動画の全フレームからdframeごとに画像を切り出す
+    for frame_count in tqdm(range(max_frame), desc="[Cut]"):
         if frame_count % dframe == 0:
             ret, current_frame = video_capture.read()
-            if ret and (frame_count == 0 or cv2.PSNR(saved_images[-1], current_frame) < 25):
-                saved_images.append(current_frame)
+            if ret and (frame_count == 0 or cv2.PSNR(images[-1], current_frame) < 25):
+                images.append(current_frame)
         else:
+            # dframe番目でないときは高速化のためフレーム画像を読み込まない
             ret = video_capture.grab()
 
-        if not ret:
-            print()
-            break
-
-        frame_count += 1
     video_capture.release()
-    return saved_images
+    return images
 
 
 # Function to detect image duplicates and remove them.
@@ -56,16 +51,12 @@ def remove_duplicate(imgs):
     delete_index = set()
     imgs_length = len(imgs)
     count = imgs_length
-    for i in range(imgs_length - 1):
-        for j in range(i + 1, imgs_length):
-            print('\r - Deleting duplicate images... {:.3f}%'.format(
-                100.0 * count / (imgs_length * (imgs_length - 1))),
-                end='')
+    for i in tqdm(range(imgs_length - 1), desc="[Remove]"):
+        for j in tqdm(range(i + 1, imgs_length), leave=False):
             if cv2.PSNR(imgs[i], imgs[j]) > 25:
                 delete_index.add(j)
         count += imgs_length
 
-    print()
     delete_index = sorted(list(delete_index))
     delete_index.reverse()
 
@@ -75,27 +66,13 @@ def remove_duplicate(imgs):
     return imgs
 
 
-def merge_pdfs(file_count, output_dir, img_filename):
-    # Merge disparate PDF files into one PDF file
-    merger = PyPDF2.PdfFileMerger()
-    for i in range(file_count):
-        print('\r - Creating Combined PDF File now... {:.3f}%'.format((i + 1) * 100.0 / file_count), end='')
-        merger.append(f'{output_dir}/{img_filename}_{i}.pdf')
-    merger.write(f'{img_filename}.pdf')
-    print(f'\nFile: {output_dir}/{img_filename}_*.pdf has been created.')
-    print(f'File: {img_filename}.pdf has been created.')
-    merger.close()
-
-
 def convert_img2pdf(images, output_dir, img_filename):
     # Convert a numpy array to an Image array in the Pillow module to generate individual PDF files.
     file_count = 0
 
     # 画像の枚数が10の何乗か？
     images_num = math.floor(math.log10(len(images)))
-    for image in images:
-        print('\r - Converting Image Array to PDF Files now... {:.3f}%'.format((file_count + 1) * 100.0 / len(images)),
-              end='')
+    for image in tqdm(images,desc="[Convert]"):
         # filename = f'{output_dir}/{img_filename}_{file_count}.pdf'
         file_name_count = str(file_count).zfill(images_num + 1)
         filename = f'{output_dir}/{img_filename}_{file_name_count}.png'
@@ -105,6 +82,17 @@ def convert_img2pdf(images, output_dir, img_filename):
 
     print()
     return file_count
+
+
+def merge_pdfs(file_count, output_dir, img_filename):
+    # Merge disparate PDF files into one PDF file
+    merger = PyPDF2.PdfFileMerger()
+    for i in tqdm(range(file_count), postfix="Merge"):
+        merger.append(f'{output_dir}/{img_filename}_{i}.pdf')
+    merger.write(f'{img_filename}.pdf')
+    print(f'\nFile: {output_dir}/{img_filename}_*.pdf has been created.')
+    print(f'File: {img_filename}.pdf has been created.')
+    merger.close()
 
 
 def main():
