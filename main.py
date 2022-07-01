@@ -35,7 +35,7 @@ def cut_images(video_name, dframe):
     max_frame = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
 
     # 動画の全フレームからdframeごとに画像を切り出す
-    for frame_count in tqdm(range(max_frame), desc="[Cut]"):
+    for frame_count in tqdm(range(max_frame), desc="[Extract images from video]"):
         if frame_count % dframe == 0:
             ret, current_frame = video_capture.read()
             if ret and (frame_count == 0 or cv2.PSNR(images[-1], current_frame) < 25):
@@ -54,7 +54,7 @@ def remove_duplicate_PSNR(imgs):
     delete_index = set()
     imgs_length = len(imgs)
     # count = imgs_length
-    for i in tqdm(range(imgs_length - 1), desc="[Remove]"):
+    for i in tqdm(range(imgs_length - 1), desc="[Remove duplicate images]"):
         for j in tqdm(range(i + 1, imgs_length), leave=False):
             if cv2.PSNR(imgs[i], imgs[j]) > 25:
                 delete_index.add(j)
@@ -80,7 +80,7 @@ def remove_duplicate(images, data_dir, video_name, frame):
     delete_index = set()
     n = len(images)
 
-    for i in tqdm(range(n - 1, 1, -1), desc="[Remove]"):
+    for i in tqdm(range(n - 1, 1, -1), desc="[Remove duplicate images]"):
         for j in tqdm(range(i - 1, 0, -1), leave=False):
             if calc_distances(data, i, j) < 100:
                 delete_index.add(j)
@@ -102,7 +102,7 @@ def convert_img2pdf(images, output_dir, img_filename):
     # 画像の枚数が10の何乗か？
     images_num = math.floor(math.log10(len(images)))
 
-    for i, image in enumerate(tqdm(images, desc="[Convert]")):
+    for i, image in enumerate(tqdm(images, desc="[Generate split PDF files]")):
         file_name_count = str(i).zfill(images_num + 1)
         filename = f'{out_dir_name}/{img_filename}_{file_name_count}.pdf'
         # filename = f'{output_dir}/{img_filename}_{file_name_count}.png'
@@ -116,7 +116,7 @@ def merge_pdfs(output_dir, img_filename):
     file_list = sorted(glob.glob(f"{out_dir_name}/{img_filename}*.pdf"))
 
     merger = PyPDF2.PdfFileMerger()
-    for pdf_file in tqdm(file_list, desc="[Merge]"):
+    for pdf_file in tqdm(file_list, desc="[Combine into a single PDF file]"):
         merger.append(pdf_file)
     merger.write(f'{img_filename}.pdf')
     print(f'\nFile: {output_dir}/{img_filename}_*.pdf has been created.')

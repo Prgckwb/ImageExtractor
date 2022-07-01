@@ -54,13 +54,13 @@ def extract_dcnn_data(images, video_name, frame, data_dir="DCNN_data", can_save=
     ])
 
     all_data = []
-    for i, image in enumerate(tqdm(images, )):
+    for i, image in enumerate(tqdm(images, desc="[Extract DCNN Features]")):
         data = predict(image, transform, model, device)
         data = data.to('cpu').detach().numpy().copy()
         all_data.append(data)
 
     all_data = np.array(all_data)
-    print(all_data.shape)
+    # print(all_data.shape)
 
     if can_save:
         os.makedirs(data_dir, exist_ok=True)
