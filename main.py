@@ -1,6 +1,7 @@
 # Written by Prgckwb
 
 import argparse
+import math
 import os
 import time
 
@@ -8,6 +9,9 @@ import PyPDF2
 import cv2
 from PIL import Image
 
+
+# TODO: プログレスバーをtqdmに移植
+# TODO: 類似度検索手法を改善
 
 # Function to retrieve command line arguments
 def init_argument():
@@ -62,15 +66,48 @@ def remove_duplicate(imgs):
         count += imgs_length
 
     print()
-    delete_index = list(delete_index)
+    delete_index = sorted(list(delete_index))
     delete_index.reverse()
+
     for i in delete_index:
         imgs.pop(i)
 
     return imgs
 
 
-if __name__ == '__main__':
+def merge_pdfs(file_count, output_dir, img_filename):
+    # Merge disparate PDF files into one PDF file
+    merger = PyPDF2.PdfFileMerger()
+    for i in range(file_count):
+        print('\r - Creating Combined PDF File now... {:.3f}%'.format((i + 1) * 100.0 / file_count), end='')
+        merger.append(f'{output_dir}/{img_filename}_{i}.pdf')
+    merger.write(f'{img_filename}.pdf')
+    print(f'\nFile: {output_dir}/{img_filename}_*.pdf has been created.')
+    print(f'File: {img_filename}.pdf has been created.')
+    merger.close()
+
+
+def convert_img2pdf(images, output_dir, img_filename):
+    # Convert a numpy array to an Image array in the Pillow module to generate individual PDF files.
+    file_count = 0
+
+    # 画像の枚数が10の何乗か？
+    images_num = math.floor(math.log10(len(images)))
+    for image in images:
+        print('\r - Converting Image Array to PDF Files now... {:.3f}%'.format((file_count + 1) * 100.0 / len(images)),
+              end='')
+        # filename = f'{output_dir}/{img_filename}_{file_count}.pdf'
+        file_name_count = str(file_count).zfill(images_num + 1)
+        filename = f'{output_dir}/{img_filename}_{file_name_count}.png'
+        img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+        img.convert("RGB").save(filename)
+        file_count += 1
+
+    print()
+    return file_count
+
+
+def main():
     # Start point for measurement of execution time
     start = time.perf_counter()
 
@@ -92,29 +129,15 @@ if __name__ == '__main__':
 
     # Recheck for duplicate images and delete them if they exist.
     images = remove_duplicate(images)
+    file_count = convert_img2pdf(images, output_dir, img_filename)
 
-    # Convert a numpy array to an Image array in the Pillow module to generate individual PDF files.
-    file_count = 0
-    for image in images:
-        print('\r - Converting Image Array to PDF Files now... {:.3f}%'.format((file_count + 1) * 100.0 / len(images)),
-              end='')
-        filename = f'{output_dir}/{img_filename}_{file_count}.pdf'
-        img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-        img.convert("RGB").save(filename)
-        file_count += 1
-
-    print()
-
-    # Merge disparate PDF files into one PDF file
-    merger = PyPDF2.PdfFileMerger()
-    for i in range(file_count):
-        print('\r - Creating Combined PDF File now... {:.3f}%'.format((i + 1) * 100.0 / file_count), end='')
-        merger.append(f'{output_dir}/{img_filename}_{i}.pdf')
-    merger.write(f'{img_filename}.pdf')
-    print(f'\nFile: {output_dir}/{img_filename}_*.pdf has been created.')
-    print(f'File: {img_filename}.pdf has been created.')
-    merger.close()
+    # merge_pdfs(file_count, output_dir, img_filename)
 
     # End point for measurement of execution time
     end = time.perf_counter()
+
     print('Execution time: {:.3f}s'.format(end - start))
+
+
+if __name__ == '__main__':
+    main()
