@@ -1,6 +1,3 @@
-# 特徴量抽出用スクリプト
-# 事前に使うだけで実際のCGIプログラムには関係しない
-
 import glob
 import os
 
@@ -98,5 +95,4 @@ def calc_distances(data, idx1, idx2):
 
 
 if __name__ == '__main__':
-    # extract_dcnn_data("01_MIT", can_save=True)
-    compare(100)
+    pass
