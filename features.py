@@ -2,6 +2,7 @@
 # 事前に使うだけで実際のCGIプログラムには関係しない
 
 import glob
+import os
 
 import numpy as np
 import torch
@@ -10,18 +11,21 @@ from PIL import Image
 from torchvision import models, transforms
 from tqdm import tqdm
 
-images_path_list = [img for img in sorted(glob.glob(f"output/*.png"))]
 
-device = "cpu"
+def get_device():
+    device = "cpu"
 
-if torch.cuda.is_available():
-    device = "cuda"
-elif torch.has_mps:
-    device = "mps"
+    if torch.cuda.is_available():
+        device = "cuda"
+    elif torch.has_mps:
+        device = "mps"
+
+    return device
 
 
-def extract_dcnn_hist(img_path, transform, model):
-    img = Image.open(img_path)
+def predict(img_path, transform, model, device):
+    img = Image.fromarray(img_path)
+    # img = Image.open(img_)
     img = transform(img).unsqueeze(0)
     img = img.to(device)
     output = model(img)
@@ -29,8 +33,8 @@ def extract_dcnn_hist(img_path, transform, model):
     return output
 
 
-def extract_dcnn_data(data_dir="data", isSaved=False):
-    # model = models.vgg16(pretrained=True)
+def extract_dcnn_data(images, video_name, frame, data_dir="DCNN_data", can_save=False):
+    device = get_device()
     model = models.vgg16(weights=models.VGG16_Weights.DEFAULT)
 
     # 最終層を取り除く
@@ -53,30 +57,30 @@ def extract_dcnn_data(data_dir="data", isSaved=False):
     ])
 
     all_data = []
-    for i, image in enumerate(tqdm(images_path_list)):
-        data = extract_dcnn_hist(image, transform, model)
+    for i, image in enumerate(tqdm(images, )):
+        data = predict(image, transform, model, device)
         data = data.to('cpu').detach().numpy().copy()
         all_data.append(data)
 
     all_data = np.array(all_data)
     print(all_data.shape)
 
-    if isSaved:
-        np.save(f"{data_dir}/DCNN", all_data)
-        return
-    else:
-        return all_data
+    if can_save:
+        os.makedirs(data_dir, exist_ok=True)
+        np.save(f"{data_dir}/{video_name}_f{frame}", all_data)
+
+    return all_data
 
 
-def compare(index=0):
+def compare(index=40):
     images_list = glob.glob("output/*.png")
-    data = np.load("data/DCNN.npy")
+    data = np.load("DCNN_data/01_MIT_DCNN.npy")
     distance = []
 
     for i in range(len(images_list)):
         d = np.sqrt((data[index][0] - data[i][0]) ** 2)
         distance.append(d.sum())
-    distance = np.array(distance) / np.max(distance)
+    distance = np.array(distance) #/ np.max(distance)
     distance = list(distance)
 
     dict = []
@@ -94,6 +98,5 @@ def calc_distances(data, idx1, idx2):
 
 
 if __name__ == '__main__':
-    # print(np.load("data/DCNN.npy").shape)
-    extract_dcnn_data(isSaved=True)
-    compare(index=44)
+    # extract_dcnn_data("01_MIT", can_save=True)
+    compare(100)

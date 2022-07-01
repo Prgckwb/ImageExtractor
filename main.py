@@ -1,18 +1,21 @@
 # Written by Prgckwb
 
 import argparse
+import glob
 import math
 import os
 import time
 
 import PyPDF2
 import cv2
-from PIL import Image
+import numpy as np
+from PIL import Image, ImageFile
 from tqdm import tqdm
 
+from features import calc_distances, extract_dcnn_data
 
-# TODO: プログレスバーをtqdmに移植
-# TODO: 類似度検索手法を改善
+ImageFile.LOAD_TRUNCATED_IMAGES = True
+
 
 # Function to retrieve command line arguments
 def init_argument():
@@ -47,15 +50,15 @@ def cut_images(video_name, dframe):
 
 # Function to detect image duplicates and remove them.
 # To detect duplicates in a double loop, use the image list once the duplicates of adjacent frames are removed.
-def remove_duplicate(imgs):
+def remove_duplicate_PSNR(imgs):
     delete_index = set()
     imgs_length = len(imgs)
-    count = imgs_length
+    # count = imgs_length
     for i in tqdm(range(imgs_length - 1), desc="[Remove]"):
         for j in tqdm(range(i + 1, imgs_length), leave=False):
             if cv2.PSNR(imgs[i], imgs[j]) > 25:
                 delete_index.add(j)
-        count += imgs_length
+        # count += imgs_length
 
     delete_index = sorted(list(delete_index))
     delete_index.reverse()
@@ -66,29 +69,55 @@ def remove_duplicate(imgs):
     return imgs
 
 
+def remove_duplicate(images, data_dir, video_name, frame):
+    data_path = f"{data_dir}/{video_name}_f{frame}.npy"
+
+    if os.path.exists(data_path):
+        data = np.load(data_path)
+    else:
+        data = extract_dcnn_data(images, video_name=video_name, frame=frame, can_save=True)
+
+    delete_index = set()
+    n = len(images)
+
+    for i in tqdm(range(n - 1, 1, -1), desc="[Remove]"):
+        for j in tqdm(range(i - 1, 0, -1), leave=False):
+            if calc_distances(data, i, j) < 100:
+                delete_index.add(j)
+
+    delete_index = sorted(list(delete_index))
+    delete_index.reverse()
+
+    for i in delete_index:
+        images.pop(i)
+
+    return images
+
+
+# Convert a numpy array to an Image array in the Pillow module to generate individual PDF files.
 def convert_img2pdf(images, output_dir, img_filename):
-    # Convert a numpy array to an Image array in the Pillow module to generate individual PDF files.
-    file_count = 0
+    out_dir_name = f"{output_dir}/{img_filename}"
+    os.makedirs(out_dir_name, exist_ok=True)
 
     # 画像の枚数が10の何乗か？
     images_num = math.floor(math.log10(len(images)))
-    for image in tqdm(images,desc="[Convert]"):
-        # filename = f'{output_dir}/{img_filename}_{file_count}.pdf'
-        file_name_count = str(file_count).zfill(images_num + 1)
-        filename = f'{output_dir}/{img_filename}_{file_name_count}.png'
+
+    for i, image in enumerate(tqdm(images, desc="[Convert]")):
+        file_name_count = str(i).zfill(images_num + 1)
+        filename = f'{out_dir_name}/{img_filename}_{file_name_count}.pdf'
+        # filename = f'{output_dir}/{img_filename}_{file_name_count}.png'
         img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
         img.convert("RGB").save(filename)
-        file_count += 1
-
-    print()
-    return file_count
 
 
-def merge_pdfs(file_count, output_dir, img_filename):
+def merge_pdfs(output_dir, img_filename):
     # Merge disparate PDF files into one PDF file
+    out_dir_name = f"{output_dir}/{img_filename}"
+    file_list = sorted(glob.glob(f"{out_dir_name}/{img_filename}*.pdf"))
+
     merger = PyPDF2.PdfFileMerger()
-    for i in tqdm(range(file_count), postfix="Merge"):
-        merger.append(f'{output_dir}/{img_filename}_{i}.pdf')
+    for pdf_file in tqdm(file_list, desc="[Merge]"):
+        merger.append(pdf_file)
     merger.write(f'{img_filename}.pdf')
     print(f'\nFile: {output_dir}/{img_filename}_*.pdf has been created.')
     print(f'File: {img_filename}.pdf has been created.')
@@ -101,10 +130,10 @@ def main():
 
     # Getting command line arguments
     args = init_argument()
-    mov_filename = args.input_file
+    video_file = args.input_file
     frame = args.frame
     output_dir = './output'
-    img_filename = mov_filename.split('.')[0]
+    video_filename = video_file.split('.')[0]
 
     # If the directory specified as the output destination does not exist, create it.
     try:
@@ -113,13 +142,13 @@ def main():
         pass
 
     # images: A list of images extracted from the video.
-    images = cut_images(mov_filename, frame)
+    images = cut_images(video_file, frame)
 
     # Recheck for duplicate images and delete them if they exist.
-    images = remove_duplicate(images)
-    file_count = convert_img2pdf(images, output_dir, img_filename)
+    images = remove_duplicate(images, video_name=video_filename, data_dir="DCNN_data", frame=frame)
+    convert_img2pdf(images, output_dir, video_filename)
 
-    # merge_pdfs(file_count, output_dir, img_filename)
+    merge_pdfs(output_dir, video_filename)
 
     # End point for measurement of execution time
     end = time.perf_counter()
