@@ -1,5 +1,6 @@
 import glob
 import os
+from pathlib import Path  # TODO: パス操作を移植する
 
 import numpy as np
 import torch
@@ -60,7 +61,6 @@ def extract_dcnn_data(images, video_name, frame, data_dir="DCNN_data", can_save=
         all_data.append(data)
 
     all_data = np.array(all_data)
-    # print(all_data.shape)
 
     if can_save:
         os.makedirs(data_dir, exist_ok=True)
@@ -77,7 +77,7 @@ def compare(index=40):
     for i in range(len(images_list)):
         d = np.sqrt((data[index][0] - data[i][0]) ** 2)
         distance.append(d.sum())
-    distance = np.array(distance) #/ np.max(distance)
+    distance = np.array(distance)  # / np.max(distance)
     distance = list(distance)
 
     dict = []

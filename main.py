@@ -21,7 +21,9 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 def init_argument():
     parser = argparse.ArgumentParser()
     parser.add_argument("input_file", help="File name of the video to be converted")
-    parser.add_argument("frame", help="Number of frames to be cut from the video.", type=int)
+    parser.add_argument("-f", "--frame", type=int, default=60, help="Number of frames to be cut from the video.", )
+    parser.add_argument("-t", "--threshold", type=int, default=100, help="Threshold used to determine image similarity")
+
     argument = parser.parse_args()
     return argument
 
@@ -53,12 +55,11 @@ def cut_images(video_name, dframe):
 def remove_duplicate_PSNR(imgs):
     delete_index = set()
     imgs_length = len(imgs)
-    # count = imgs_length
+
     for i in tqdm(range(imgs_length - 1), desc="[Remove duplicate images]"):
         for j in tqdm(range(i + 1, imgs_length), leave=False):
             if cv2.PSNR(imgs[i], imgs[j]) > 25:
                 delete_index.add(j)
-        # count += imgs_length
 
     delete_index = sorted(list(delete_index))
     delete_index.reverse()
@@ -69,7 +70,7 @@ def remove_duplicate_PSNR(imgs):
     return imgs
 
 
-def remove_duplicate(images, data_dir, video_name, frame):
+def remove_duplicate(images, data_dir, video_name, frame, threshold):
     data_path = f"{data_dir}/{video_name}_f{frame}.npy"
 
     if os.path.exists(data_path):
@@ -82,7 +83,7 @@ def remove_duplicate(images, data_dir, video_name, frame):
 
     for i in tqdm(range(n - 1, 1, -1), desc="[Remove duplicate images]"):
         for j in tqdm(range(i - 1, 0, -1), leave=False):
-            if calc_distances(data, i, j) < 100:
+            if calc_distances(data, i, j) < threshold:
                 delete_index.add(j)
 
     delete_index = sorted(list(delete_index))
@@ -105,19 +106,20 @@ def convert_img2pdf(images, output_dir, img_filename):
     for i, image in enumerate(tqdm(images, desc="[Generate split PDF files]")):
         file_name_count = str(i).zfill(images_num + 1)
         filename = f'{out_dir_name}/{img_filename}_{file_name_count}.pdf'
-        # filename = f'{output_dir}/{img_filename}_{file_name_count}.png'
         img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
         img.convert("RGB").save(filename)
 
 
+# Merge disparate PDF files into one PDF file
 def merge_pdfs(output_dir, img_filename):
-    # Merge disparate PDF files into one PDF file
     out_dir_name = f"{output_dir}/{img_filename}"
     file_list = sorted(glob.glob(f"{out_dir_name}/{img_filename}*.pdf"))
 
     merger = PyPDF2.PdfFileMerger()
+
     for pdf_file in tqdm(file_list, desc="[Combine into a single PDF file]"):
         merger.append(pdf_file)
+
     merger.write(f'{img_filename}.pdf')
     print(f'\nFile: {output_dir}/{img_filename}_*.pdf has been created.')
     print(f'File: {img_filename}.pdf has been created.')
@@ -132,20 +134,19 @@ def main():
     args = init_argument()
     video_file = args.input_file
     frame = args.frame
+    threshold = args.threshold
     output_dir = './output'
     video_filename = video_file.split('.')[0]
 
     # If the directory specified as the output destination does not exist, create it.
-    try:
-        os.mkdir(output_dir)
-    except FileExistsError:
-        pass
+    os.makedirs(output_dir, exist_ok=True)
 
     # images: A list of images extracted from the video.
     images = cut_images(video_file, frame)
 
     # Recheck for duplicate images and delete them if they exist.
-    images = remove_duplicate(images, video_name=video_filename, data_dir="DCNN_data", frame=frame)
+    images = remove_duplicate(images=images, video_name=video_filename,
+                              data_dir="DCNN_data", frame=frame, threshold=threshold)
     convert_img2pdf(images, output_dir, video_filename)
 
     merge_pdfs(output_dir, video_filename)
