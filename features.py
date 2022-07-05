@@ -31,9 +31,10 @@ def predict(img_path, transform, model, device):
     return output
 
 
-def extract_dcnn_data(images, video_name, frame, data_dir="DCNN_data", can_save=False):
+def extract_dcnn_data(images, video_name, frame, data_dir, can_save=False):
     device = get_device()
-    model = models.vgg16(weights=models.VGG16_Weights.DEFAULT)
+    weights = models.VGG16_Weights.DEFAULT
+    model = models.vgg16(weights=weights)
 
     # 最終層を取り除く
     layers = list(model.classifier.children())[:-2]

@@ -52,7 +52,7 @@ def cut_images(video_name, dframe):
 
 # Function to detect image duplicates and remove them.
 # To detect duplicates in a double loop, use the image list once the duplicates of adjacent frames are removed.
-def remove_duplicate_PSNR(imgs):
+def remove_duplicate_psnr(imgs):
     delete_index = set()
     imgs_length = len(imgs)
 
@@ -76,7 +76,8 @@ def remove_duplicate(images, data_dir, video_name, frame, threshold):
     if os.path.exists(data_path):
         data = np.load(data_path)
     else:
-        data = extract_dcnn_data(images, video_name=video_name, frame=frame, can_save=True)
+        data = extract_dcnn_data(images=images, video_name=video_name,
+                                 frame=frame, data_dir=data_dir, can_save=True)
 
     delete_index = set()
     n = len(images)
@@ -135,7 +136,9 @@ def main():
     video_file = args.input_file
     frame = args.frame
     threshold = args.threshold
+
     output_dir = './output'
+    dcnn_data_dir = "./data"
     video_filename = video_file.split('.')[0]
 
     # If the directory specified as the output destination does not exist, create it.
@@ -146,7 +149,7 @@ def main():
 
     # Recheck for duplicate images and delete them if they exist.
     images = remove_duplicate(images=images, video_name=video_filename,
-                              data_dir="DCNN_data", frame=frame, threshold=threshold)
+                              data_dir=dcnn_data_dir, frame=frame, threshold=threshold)
     convert_img2pdf(images, output_dir, video_filename)
 
     merge_pdfs(output_dir, video_filename)
